@@ -4,13 +4,15 @@ import { createContext, useReducer, ReactNode } from "react";
 import { LibraryState, LibraryAction } from "@/types";
 import { seedData } from "@/data/seed";
 
+const CHECKOUT_DURATION_DAYS = 14;
+
 function reducer(state: LibraryState, action: LibraryAction): LibraryState {
   switch (action.type) {
     case "CHECKOUT_BOOK": {
       const { bookId, memberId } = action.payload;
       const now = new Date();
       const due = new Date(now);
-      due.setDate(due.getDate() + 14);
+      due.setDate(due.getDate() + CHECKOUT_DURATION_DAYS);
       return {
         ...state,
         checkouts: [
