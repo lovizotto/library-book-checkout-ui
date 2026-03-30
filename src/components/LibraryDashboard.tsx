@@ -1,20 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useLibrary } from "@/hooks/useLibrary";
 import { useStateHash } from "@/hooks/useStateHash";
-import { BookCard } from "./BookCard";
-import { OverdueList } from "./OverdueList";
-
-type Tab = "books" | "overdue";
-
-const TABS: { key: Tab; label: string }[] = [
-  { key: "books", label: "Books" },
-  { key: "overdue", label: "Overdue" },
-];
+import { BookTable } from "./BookTable";
 
 export function LibraryDashboard() {
-  const [tab, setTab] = useState<Tab>("books");
   const { books, activeCheckouts, overdueCheckouts } = useLibrary();
   const hash = useStateHash();
 
@@ -25,8 +15,7 @@ export function LibraryDashboard() {
   ];
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-      {/* Header */}
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
       <header className="mb-8 sm:mb-10">
         <div className="flex items-end justify-between">
           <div>
@@ -38,7 +27,6 @@ export function LibraryDashboard() {
           <code className="hidden text-xs text-gray-300 sm:block">#{hash}</code>
         </div>
 
-        {/* Stats */}
         <div className="mt-6 grid grid-cols-3 gap-3">
           {stats.map((s) => (
             <div
@@ -54,37 +42,7 @@ export function LibraryDashboard() {
         </div>
       </header>
 
-      {/* Tabs */}
-      <nav className="mb-8 flex gap-1 rounded-xl bg-gray-100/80 p-1 backdrop-blur-sm">
-        {TABS.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setTab(key)}
-            className={`flex-1 cursor-pointer rounded-lg px-4 py-2.5 text-sm font-medium transition-all sm:flex-none ${
-              tab === key
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            {label}
-            {key === "overdue" && overdueCheckouts.length > 0 && (
-              <span className="ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
-                {overdueCheckouts.length}
-              </span>
-            )}
-          </button>
-        ))}
-      </nav>
-
-      {/* Content */}
-      {tab === "books" && (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {books.map((b) => (
-            <BookCard key={b.id} book={b} />
-          ))}
-        </div>
-      )}
-      {tab === "overdue" && <OverdueList />}
+      <BookTable />
     </div>
   );
 }

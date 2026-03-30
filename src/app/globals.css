@@ -8,3 +8,8 @@ body {
   background: linear-gradient(145deg, #f8fafc 0%, #eef2ff 40%, #f1f5f9 100%);
   min-height: 100vh;
 }
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.4);
+  backdrop-filter: blur(4px);
+}
