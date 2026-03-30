@@ -1,6 +1,6 @@
 import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import CheckoutModal from "./CheckoutModal";
+import CheckoutModal from "@/components/CheckoutModal";
 import { renderWithLibrary, createMockDispatch } from "@/test-utils";
 
 beforeEach(() => {

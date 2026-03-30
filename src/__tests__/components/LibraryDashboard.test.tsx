@@ -1,6 +1,6 @@
 import { screen } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { LibraryDashboard } from "./LibraryDashboard";
+import { LibraryDashboard } from "@/components/LibraryDashboard";
 import { renderWithLibrary } from "@/test-utils";
 
 beforeEach(() => {

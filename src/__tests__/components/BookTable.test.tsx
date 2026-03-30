@@ -1,6 +1,6 @@
 import { screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { BookTable } from "./BookTable";
+import { BookTable } from "@/components/BookTable";
 import { renderWithLibrary, createMockDispatch } from "@/test-utils";
 
 beforeEach(() => {
