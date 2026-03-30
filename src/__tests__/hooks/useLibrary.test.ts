@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { createElement, ReactNode } from "react";
 import { LibraryContext } from "@/context/LibraryContext";
 import { useLibrary } from "@/hooks/useLibrary";
