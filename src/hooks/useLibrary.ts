@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useMemo, useCallback } from "react";
+import { useContext, useMemo } from "react";
 import { LibraryContext } from "@/context/LibraryContext";
 
 export function useLibrary() {
@@ -16,39 +16,20 @@ export function useLibrary() {
     return activeCheckouts.filter((c) => new Date(c.dueDate) < now);
   }, [activeCheckouts]);
 
-  const isAvailable = useCallback(
-    (bookId: string) => !activeCheckouts.some((c) => c.bookId === bookId),
-    [activeCheckouts]
-  );
+  const isAvailable = (bookId: string) =>
+    !activeCheckouts.some((c) => c.bookId === bookId);
 
-  const getCheckoutForBook = useCallback(
-    (bookId: string) => activeCheckouts.find((c) => c.bookId === bookId),
-    [activeCheckouts]
-  );
+  const getCheckoutForBook = (bookId: string) =>
+    activeCheckouts.find((c) => c.bookId === bookId);
 
-  const getBook = useCallback(
-    (id: string) => state.books.find((b) => b.id === id),
-    [state.books]
-  );
+  const getBook = (id: string) => state.books.find((b) => b.id === id);
+  const getMember = (id: string) => state.members.find((m) => m.id === id);
 
-  const getMember = useCallback(
-    (id: string) => state.members.find((m) => m.id === id),
-    [state.members]
-  );
+  const checkout = (bookId: string, memberId: string) =>
+    dispatch({ type: "CHECKOUT_BOOK", payload: { bookId, memberId } });
 
-  const checkout = useCallback(
-    (bookId: string, memberId: string) => {
-      dispatch({ type: "CHECKOUT_BOOK", payload: { bookId, memberId } });
-    },
-    [dispatch]
-  );
-
-  const returnBook = useCallback(
-    (checkoutId: string) => {
-      dispatch({ type: "RETURN_BOOK", payload: { checkoutId } });
-    },
-    [dispatch]
-  );
+  const returnBook = (checkoutId: string) =>
+    dispatch({ type: "RETURN_BOOK", payload: { checkoutId } });
 
   return {
     ...state,
