@@ -96,7 +96,7 @@ function BookCard({
             <p className="min-w-0 truncate text-sm text-gray-500">
               <span className="font-medium text-gray-700">{borrowerName}</span>
               <span className="mx-1 text-gray-300">&middot;</span>
-              <span>due {dueDate}</span>
+              <span>{`due ${dueDate}`}</span>
             </p>
             <Button variant="ghost" onClick={onReturn}>Return</Button>
           </>
