@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-export function CheckoutModal({ book, onClose }: Props) {
+export default function CheckoutModal({ book, onClose }: Props) {
   const { members, checkout } = useLibrary();
   const [memberId, setMemberId] = useState("");
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -30,10 +30,9 @@ export function CheckoutModal({ book, onClose }: Props) {
       ref={dialogRef}
       onClose={onClose}
       onClick={(e) => {
-        // Click on backdrop (the dialog itself, not its children) closes it
         if (e.target === dialogRef.current) onClose();
       }}
-      className="w-full max-w-md rounded-2xl bg-white p-0 shadow-xl"
+      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white p-0 shadow-xl open:animate-[fade-in_150ms_ease-out]"
     >
       <div className="p-6">
         <h2 className="text-lg font-semibold text-gray-900">Check out book</h2>
