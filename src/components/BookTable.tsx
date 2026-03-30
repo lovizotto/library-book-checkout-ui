@@ -3,8 +3,8 @@
 import { lazy, Suspense, useState, useMemo } from "react";
 import { Book } from "@/types";
 import { useLibrary } from "@/hooks/useLibrary";
-import { Badge } from "./Badge";
 import { Button } from "./Button";
+import { StatusBadge } from "./StatusBadge";
 
 const CheckoutModal = lazy(() => import("./CheckoutModal"));
 
@@ -14,10 +14,35 @@ const VIEWS: View[] = ["all", "overdue"];
 const VIEW_LABELS: Record<View, string> = { all: "All books", overdue: "Overdue" };
 const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 
-function StatusBadge({ available, overdue }: { available: boolean; overdue: boolean }) {
-  const variant = available ? "green" : overdue ? "red" : "yellow";
-  const label = available ? "Available" : overdue ? "Overdue" : "Checked out";
-  return <Badge variant={variant}>{label}</Badge>;
+interface EnrichedBook {
+  book: Book;
+  available: boolean;
+  overdue: boolean;
+  borrowerName: string | undefined;
+  dueDate: string | undefined;
+  checkoutId: string | undefined;
+}
+
+function enrichBooks(
+  books: Book[],
+  isAvailable: (id: string) => boolean,
+  getCheckoutForBook: (id: string) => { memberId: string; dueDate: string; id: string } | undefined,
+  getMember: (id: string) => { name: string } | undefined,
+): EnrichedBook[] {
+  const now = new Date();
+  return books.map((book) => {
+    const active = getCheckoutForBook(book.id);
+    const available = isAvailable(book.id);
+    const overdue = active ? new Date(active.dueDate) < now : false;
+    return {
+      book,
+      available,
+      overdue,
+      borrowerName: active ? getMember(active.memberId)?.name : undefined,
+      dueDate: active ? dateFormat.format(new Date(active.dueDate)) : undefined,
+      checkoutId: active?.id,
+    };
+  });
 }
 
 export function BookTable() {
@@ -26,11 +51,13 @@ export function BookTable() {
   const [view, setView] = useState<View>("all");
   const [checkingOut, setCheckingOut] = useState<Book | null>(null);
 
-  const rows = useMemo(() => {
+  const filteredBooks = useMemo(() => {
     if (view !== "overdue") return books;
     const overdueBookIds = new Set(overdueCheckouts.map((c) => c.bookId));
     return books.filter((b) => overdueBookIds.has(b.id));
   }, [view, books, overdueCheckouts]);
+
+  const rows = enrichBooks(filteredBooks, isAvailable, getCheckoutForBook, getMember);
 
   return (
     <>
@@ -69,37 +96,32 @@ export function BookTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {rows.map((book) => {
-              const available = isAvailable(book.id);
-              const active = getCheckoutForBook(book.id);
-              const borrower = active ? getMember(active.memberId) : null;
-              const overdue = active ? new Date(active.dueDate) < new Date() : false;
-
-              return (
-                <tr key={book.id} className="transition-colors hover:bg-gray-50/80">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{book.title}</p>
-                    <p className="text-xs text-gray-400">{book.author}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge available={available} overdue={overdue} />
-                  </td>
-                  <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
-                    {borrower?.name ?? "\u2014"}
-                  </td>
-                  <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
-                    {active ? dateFormat.format(new Date(active.dueDate)) : "\u2014"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {available ? (
-                      <Button onClick={() => setCheckingOut(book)}>Check out</Button>
-                    ) : (
-                      <Button variant="ghost" onClick={() => returnBook(active!.id)}>Return</Button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {rows.map(({ book, available, overdue, borrowerName, dueDate, checkoutId }) => (
+              <tr key={book.id} className="transition-colors hover:bg-gray-50/80">
+                <td className="px-4 py-3">
+                  <p className="font-medium text-gray-900">{book.title}</p>
+                  <p className="text-xs text-gray-400">{book.author}</p>
+                </td>
+                <td className="px-4 py-3">
+                  <StatusBadge available={available} overdue={overdue} />
+                </td>
+                <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
+                  {borrowerName ?? "\u2014"}
+                </td>
+                <td className="hidden px-4 py-3 text-gray-500 md:table-cell">
+                  {dueDate ?? "\u2014"}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {available ? (
+                    <Button onClick={() => setCheckingOut(book)}>Check out</Button>
+                  ) : (
+                    <Button variant="ghost" onClick={() => checkoutId && returnBook(checkoutId)}>
+                      Return
+                    </Button>
+                  )}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
@@ -110,39 +132,34 @@ export function BookTable() {
 
       {/* Mobile list */}
       <div className="space-y-3 sm:hidden">
-        {rows.map((book) => {
-          const available = isAvailable(book.id);
-          const active = getCheckoutForBook(book.id);
-          const borrower = active ? getMember(active.memberId) : null;
-          const overdue = active ? new Date(active.dueDate) < new Date() : false;
-
-          return (
-            <div key={book.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-gray-900">{book.title}</p>
-                  <p className="text-xs text-gray-400">{book.author}</p>
-                </div>
-                <StatusBadge available={available} overdue={overdue} />
+        {rows.map(({ book, available, overdue, borrowerName, dueDate, checkoutId }) => (
+          <div key={book.id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium text-gray-900">{book.title}</p>
+                <p className="text-xs text-gray-400">{book.author}</p>
               </div>
-
-              <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                {available ? (
-                  <Button className="w-full" onClick={() => setCheckingOut(book)}>Check out</Button>
-                ) : (
-                  <>
-                    <p className="min-w-0 truncate text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">{borrower?.name}</span>
-                      <span className="mx-1 text-gray-300">&middot;</span>
-                      <span>{`due ${dateFormat.format(new Date(active!.dueDate))}`}</span>
-                    </p>
-                    <Button variant="ghost" onClick={() => returnBook(active!.id)}>Return</Button>
-                  </>
-                )}
-              </div>
+              <StatusBadge available={available} overdue={overdue} />
             </div>
-          );
-        })}
+
+            <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+              {available ? (
+                <Button className="w-full" onClick={() => setCheckingOut(book)}>Check out</Button>
+              ) : (
+                <>
+                  <p className="min-w-0 truncate text-sm text-gray-500">
+                    <span className="font-medium text-gray-700">{borrowerName}</span>
+                    <span className="mx-1 text-gray-300">&middot;</span>
+                    <span>{`due ${dueDate}`}</span>
+                  </p>
+                  <Button variant="ghost" onClick={() => checkoutId && returnBook(checkoutId)}>
+                    Return
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
 
         {rows.length === 0 && (
           <p className="py-12 text-center text-sm text-gray-400">No overdue checkouts</p>

@@ -1,10 +1,21 @@
 "use client";
 
-import { createContext, useReducer, ReactNode } from "react";
+import { createContext, useReducer, useEffect, ReactNode } from "react";
 import { LibraryState, LibraryAction } from "@/types";
 import { seedData } from "@/data/seed";
 
+const STORAGE_KEY = "library-state";
 const CHECKOUT_DURATION_DAYS = 14;
+
+function loadState(): LibraryState {
+  if (typeof window === "undefined") return seedData;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : seedData;
+  } catch {
+    return seedData;
+  }
+}
 
 function reducer(state: LibraryState, action: LibraryAction): LibraryState {
   switch (action.type) {
@@ -46,7 +57,12 @@ export const LibraryContext = createContext<{
 }>({ state: seedData, dispatch: () => {} });
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, seedData);
+  const [state, dispatch] = useReducer(reducer, undefined, loadState);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [state]);
+
   return (
     <LibraryContext.Provider value={{ state, dispatch }}>
       {children}
