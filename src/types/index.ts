@@ -27,3 +27,12 @@ export interface LibraryState {
 export type LibraryAction =
   | { type: "CHECKOUT_BOOK"; payload: { bookId: string; memberId: string } }
   | { type: "RETURN_BOOK"; payload: { checkoutId: string } };
+
+export interface EnrichedBook {
+  book: Book;
+  available: boolean;
+  overdue: boolean;
+  borrowerName: string | undefined;
+  dueDate: string | undefined;
+  checkoutId: string | undefined;
+}

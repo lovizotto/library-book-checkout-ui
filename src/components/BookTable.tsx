@@ -3,6 +3,7 @@
 import { lazy, Suspense, useState, useMemo } from "react";
 import { Book } from "@/types";
 import { useLibrary } from "@/hooks/useLibrary";
+import { enrichBooks } from "@/utils/enrichBooks";
 import { Button } from "./Button";
 import { StatusBadge } from "./StatusBadge";
 
@@ -12,38 +13,6 @@ type View = "all" | "overdue";
 
 const VIEWS: View[] = ["all", "overdue"];
 const VIEW_LABELS: Record<View, string> = { all: "All books", overdue: "Overdue" };
-const dateFormat = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
-
-interface EnrichedBook {
-  book: Book;
-  available: boolean;
-  overdue: boolean;
-  borrowerName: string | undefined;
-  dueDate: string | undefined;
-  checkoutId: string | undefined;
-}
-
-function enrichBooks(
-  books: Book[],
-  isAvailable: (id: string) => boolean,
-  getCheckoutForBook: (id: string) => { memberId: string; dueDate: string; id: string } | undefined,
-  getMember: (id: string) => { name: string } | undefined,
-): EnrichedBook[] {
-  const now = new Date();
-  return books.map((book) => {
-    const active = getCheckoutForBook(book.id);
-    const available = isAvailable(book.id);
-    const overdue = active ? new Date(active.dueDate) < now : false;
-    return {
-      book,
-      available,
-      overdue,
-      borrowerName: active ? getMember(active.memberId)?.name : undefined,
-      dueDate: active ? dateFormat.format(new Date(active.dueDate)) : undefined,
-      checkoutId: active?.id,
-    };
-  });
-}
 
 export function BookTable() {
   const { books, isAvailable, getCheckoutForBook, getMember, overdueCheckouts, returnBook } =
